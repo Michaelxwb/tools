@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE and Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+
+# Build and Deployment
+dist/
+build/
+*.spec
+*.exe
+*.msi
+*.zip
+*.tar.gz
+*.whl
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment files
+env/
+venv/
+.venv/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+
+# PyInstaller specific
+build/
+dist/
+*.spec
+*.exe
+*.msi
+*.zip
+*.tar.gz
+*.whl
+
+# Local configuration files
+.local/
+.env
+.env.local
+.env.development
+.env.production
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+
+# Docker
+.dockerignore
+Dockerfile

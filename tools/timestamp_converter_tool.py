@@ -143,7 +143,8 @@ class TimestampConverterTool(BaseTool):
         self.datetime_entry = ttk.Entry(input_frame, font=('Consolas', 12), width=20)
         self.datetime_entry.pack(side=tk.LEFT, padx=(20, 10))
         
-        convert_dt_btn = ttk.Button(input_frame, text="转换", command=self.convert_datetime, width=8)
+        convert_dt_btn = ttk.Button(input_frame, text="🔄 转换", command=self.convert_datetime, 
+                                   width=10, style="Primary.TButton")
         convert_dt_btn.pack(side=tk.LEFT, padx=5)
         
         # 结果显示
@@ -155,9 +156,9 @@ class TimestampConverterTool(BaseTool):
                                 font=('Consolas', 12), state='readonly', width=15)
         result_entry.pack(side=tk.LEFT, padx=(20, 10))
         
-        copy_dt_result_btn = ttk.Button(result_frame, text="复制", 
+        copy_dt_result_btn = ttk.Button(result_frame, text="📋 复制", 
                                        command=lambda: self.copy_to_clipboard(self.datetime_result_var.get()), 
-                                       width=8)
+                                       width=10, style="Secondary.TButton")
         copy_dt_result_btn.pack(side=tk.LEFT, padx=5)
         
         # 时间单位选择
@@ -169,8 +170,8 @@ class TimestampConverterTool(BaseTool):
         ttk.Radiobutton(unit_frame, text="秒", variable=self.time_unit, value="秒").pack(side=tk.LEFT, padx=10)
         ttk.Radiobutton(unit_frame, text="毫秒", variable=self.time_unit, value="毫秒").pack(side=tk.LEFT, padx=10)
         
-        copy_unit_btn = ttk.Button(unit_frame, text="复制", 
-                                  command=self.copy_with_unit, width=8)
+        copy_unit_btn = ttk.Button(unit_frame, text="📋 复制", 
+                                  command=self.copy_with_unit, width=10, style="Secondary.TButton")
         copy_unit_btn.pack(side=tk.LEFT, padx=(20, 0))
     
     def update_current_time(self):
@@ -191,9 +192,9 @@ class TimestampConverterTool(BaseTool):
         """切换时间更新状态"""
         self.is_updating = not self.is_updating
         if self.is_updating:
-            self.stop_btn.config(text="停止")
+            self.stop_btn.config(text="⏸️ 停止")
         else:
-            self.stop_btn.config(text="开始")
+            self.stop_btn.config(text="▶️ 开始")
     
     def copy_current_timestamp(self):
         """复制当前时间戳"""
@@ -261,6 +262,11 @@ class TimestampConverterTool(BaseTool):
             
             # 转换为时间戳
             timestamp = int(dt.timestamp())
+            
+            # 根据用户选择的单位调整时间戳
+            if self.time_unit.get() == "毫秒":
+                timestamp = timestamp * 1000
+            
             self.datetime_result_var.set(str(timestamp))
             
         except Exception as e:
