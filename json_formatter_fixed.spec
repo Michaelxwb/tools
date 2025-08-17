@@ -5,7 +5,7 @@ block_cipher = None
 
 a = Analysis(
     ['toolkit_main.py'],
-    pathex=['D:/trans_json'],
+    pathex=['D:/tools'],
     binaries=[],
     datas=[("icon.ico", "."), ("icon.png", ".")],
     hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'tools.json_formatter_tool', 'tools.timestamp_converter_tool', 'tools.base_tool'],
@@ -40,5 +40,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='D:/trans_json/icon.ico',
+    icon='D:/tools/icon.ico',
 )
