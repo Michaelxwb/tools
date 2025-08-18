@@ -64,14 +64,14 @@ class TimestampConverterTool(BaseTool):
         
         self.current_timestamp_label = QLabel()
         self.current_timestamp_label.setFont(QFont("Consolas", 12, QFont.Bold))
-        self.current_timestamp_label.setStyleSheet("color: #0078d4; font-size: 15px;")
+        self.current_timestamp_label.setStyleSheet("color: #0078d4; font-size: 16px;")
         time_display_layout.addWidget(self.current_timestamp_label)
         time_display_layout.addStretch()
         
         # 停止和复制按钮
         self.stop_btn = QPushButton("⏸️ 停止")
         self.stop_btn.clicked.connect(self.toggle_update)
-        self.stop_btn.setFixedWidth(100)
+        self.stop_btn.setFixedWidth(80)
         self.stop_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
@@ -93,7 +93,7 @@ class TimestampConverterTool(BaseTool):
         
         copy_btn = QPushButton("📋 复制")
         copy_btn.clicked.connect(self.copy_current_timestamp)
-        copy_btn.setFixedWidth(100)
+        copy_btn.setFixedWidth(80)
         copy_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
@@ -139,7 +139,7 @@ class TimestampConverterTool(BaseTool):
         
         convert_btn = QPushButton("🔄 转换")
         convert_btn.clicked.connect(self.convert_timestamp)
-        convert_btn.setFixedWidth(100)
+        convert_btn.setFixedWidth(80)
         convert_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
@@ -175,7 +175,7 @@ class TimestampConverterTool(BaseTool):
         
         copy_result_btn = QPushButton("📋 复制")
         copy_result_btn.clicked.connect(lambda: self.copy_to_clipboard(self.timestamp_result_entry.text()))
-        copy_result_btn.setFixedWidth(100)
+        copy_result_btn.setFixedWidth(80)
         copy_result_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
@@ -222,7 +222,7 @@ class TimestampConverterTool(BaseTool):
         
         convert_dt_btn = QPushButton("🔄 转换")
         convert_dt_btn.clicked.connect(self.convert_datetime)
-        convert_dt_btn.setFixedWidth(100)
+        convert_dt_btn.setFixedWidth(80)
         convert_dt_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
@@ -248,18 +248,37 @@ class TimestampConverterTool(BaseTool):
         # 结果显示
         result_frame = QWidget()
         result_layout = QHBoxLayout(result_frame)
-        result_layout.setContentsMargins(0, 0, 0, 15)
+        result_layout.setContentsMargins(0, 0, 0, 0)
         
+        # 时间单位选择
+        unit_group = QButtonGroup()
+        second_radio = QRadioButton("秒")
+        millisecond_radio = QRadioButton("毫秒")
+        second_radio.setChecked(True)
+        unit_group.addButton(second_radio)
+        unit_group.addButton(millisecond_radio)
+        
+        # 将毫秒单选按钮保存为实例变量
+        self.milliseconds_radio = millisecond_radio
+        
+        # 单位选择布局
+        unit_layout = QHBoxLayout()
+        unit_layout.setContentsMargins(0, 0, 0, 0)
+        unit_layout.addWidget(second_radio)
+        unit_layout.addWidget(millisecond_radio)
+        unit_layout.addStretch()
+        
+        # 结果显示框
         self.datetime_result_entry = QLineEdit()
         self.datetime_result_entry.setFont(QFont("Consolas", 12))
         self.datetime_result_entry.setReadOnly(True)
         self.datetime_result_entry.setFixedWidth(150)
-        result_layout.addWidget(self.datetime_result_entry)
         
-        copy_dt_result_btn = QPushButton("📋 复制")
-        copy_dt_result_btn.clicked.connect(lambda: self.copy_to_clipboard(self.datetime_result_entry.text()))
-        copy_dt_result_btn.setFixedWidth(100)
-        copy_dt_result_btn.setStyleSheet("""
+        # 复制按钮
+        copy_result_btn = QPushButton("📋 复制")
+        copy_result_btn.clicked.connect(lambda: self.copy_to_clipboard(self.datetime_result_entry.text()))
+        copy_result_btn.setFixedWidth(80)
+        copy_result_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
                 background-color: #881798;
@@ -276,53 +295,15 @@ class TimestampConverterTool(BaseTool):
                 background-color: #5c106a;
             }
         """)
-        result_layout.addWidget(copy_dt_result_btn)
+        
+        # 将组件添加到结果布局
+        result_layout.addLayout(unit_layout)
+        result_layout.addWidget(self.datetime_result_entry)
+        result_layout.addWidget(copy_result_btn)
         result_layout.addStretch()
         
         group_layout.addWidget(result_frame)
         
-        # 时间单位选择
-        unit_frame = QWidget()
-        unit_layout = QHBoxLayout(unit_frame)
-        unit_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.time_unit_group = QButtonGroup()
-        
-        self.seconds_radio = QRadioButton("秒")
-        self.milliseconds_radio = QRadioButton("毫秒")
-        self.seconds_radio.setChecked(True)
-        
-        self.time_unit_group.addButton(self.seconds_radio)
-        self.time_unit_group.addButton(self.milliseconds_radio)
-        
-        unit_layout.addWidget(self.seconds_radio)
-        unit_layout.addWidget(self.milliseconds_radio)
-        
-        copy_unit_btn = QPushButton("📋 复制")
-        copy_unit_btn.clicked.connect(self.copy_with_unit)
-        copy_unit_btn.setFixedWidth(100)
-        copy_unit_btn.setStyleSheet("""
-            QPushButton {
-                font-weight: bold;
-                background-color: #881798;
-                color: white;
-                border: none;
-                padding: 8px;
-                border-radius: 4px;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #721481;
-            }
-            QPushButton:pressed {
-                background-color: #5c106a;
-            }
-        """)
-        unit_layout.addWidget(copy_unit_btn)
-        unit_layout.addStretch()
-        
-        group_layout.addWidget(unit_frame)
-    
     def update_current_time(self):
         """更新当前时间显示"""
         if self.is_updating and hasattr(self, 'current_timestamp_label'):
@@ -330,7 +311,7 @@ class TimestampConverterTool(BaseTool):
             self.current_timestamp_label.setText(str(current_timestamp))
         
         # 每秒更新一次
-        QTimer.singleShot(1000, self.update_current_time)
+        QTimer.singleShot(800, self.update_current_time)
     
     def toggle_update(self):
         """切换时间更新状态"""

@@ -99,7 +99,7 @@ class DeveloperToolkit(QMainWindow):
         json_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
-                font-size: 15px;
+                font-size: 13px;
                 padding: 10px 20px;
                 border: 2px solid #cccccc;
                 border-radius: 4px;
@@ -119,7 +119,7 @@ class DeveloperToolkit(QMainWindow):
         timestamp_btn.setStyleSheet("""
             QPushButton {
                 font-weight: bold;
-                font-size: 15px;
+                font-size: 13px;
                 padding: 10px 20px;
                 border: 2px solid #cccccc;
                 border-radius: 4px;
@@ -171,7 +171,7 @@ class DeveloperToolkit(QMainWindow):
                 button.setStyleSheet("""
                     QPushButton {
                         font-weight: bold;
-                        font-size: 15px;
+                        font-size: 13px;
                         padding: 10px 20px;
                         border: 2px solid #0078d4;
                         border-radius: 4px;
@@ -183,7 +183,7 @@ class DeveloperToolkit(QMainWindow):
                 button.setStyleSheet("""
                     QPushButton {
                         font-weight: bold;
-                        font-size: 15px;
+                        font-size: 13px;
                         padding: 10px 20px;
                         border: 2px solid #cccccc;
                         border-radius: 4px;

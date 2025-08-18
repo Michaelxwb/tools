@@ -8,7 +8,8 @@ import json
 import os
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                              QLabel, QTextEdit, QSplitter, QFileDialog, 
-                             QMessageBox, QDialog, QStyle, QFrame, QSizePolicy)
+                             QMessageBox, QDialog, QStyle, QFrame, QSizePolicy,
+                             QTreeWidget, QTreeWidgetItem, QHeaderView)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QTextCursor
 from .base_tool import BaseTool
@@ -64,7 +65,7 @@ class JSONFormatterTool(BaseTool):
                 border: none;
                 padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #106ebe;
@@ -87,7 +88,7 @@ class JSONFormatterTool(BaseTool):
                 border: none;
                 padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #3c6a04;
@@ -110,7 +111,7 @@ class JSONFormatterTool(BaseTool):
                 border: none;
                 padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #3b5a9a;
@@ -140,7 +141,7 @@ class JSONFormatterTool(BaseTool):
                 border: none;
                 padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #a4262c;
@@ -163,7 +164,7 @@ class JSONFormatterTool(BaseTool):
                 border: none;
                 padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #721481;
@@ -185,7 +186,7 @@ class JSONFormatterTool(BaseTool):
                 border: none;
                 padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #0e6e0e;
@@ -220,25 +221,106 @@ class JSONFormatterTool(BaseTool):
         self.input_text.setFont(font)
         input_layout.addWidget(self.input_text)
         
-        # 右侧输出区域
-        output_widget = QFrame()
-        output_widget.setFrameStyle(QFrame.StyledPanel)
-        output_layout = QVBoxLayout(output_widget)
-        output_layout.setContentsMargins(5, 5, 5, 5)
+        # 右侧输出区域（使用标签页方式展示文本和树形视图）
+        self.output_widget = QFrame()
+        self.output_widget.setFrameStyle(QFrame.StyledPanel)
+        self.output_layout = QVBoxLayout(self.output_widget)
+        self.output_layout.setContentsMargins(5, 5, 5, 5)
         
         output_label = QLabel("✨ 格式化结果")
         output_label.setStyleSheet("font-weight: bold;")
-        output_layout.addWidget(output_label)
+        self.output_layout.addWidget(output_label)
+        
+        # 创建分割器用于文本视图和树形视图
+        self.output_splitter = QSplitter(Qt.Vertical)
         
         # 输出文本框
         self.output_text = QTextEdit()
         self.output_text.setFont(font)
         self.output_text.setReadOnly(True)
-        output_layout.addWidget(self.output_text)
+        
+        # 树形视图容器
+        tree_container = QWidget()
+        tree_layout = QVBoxLayout(tree_container)
+        tree_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # 树形视图控制按钮
+        tree_control_layout = QHBoxLayout()
+        tree_control_layout.setContentsMargins(0, 0, 0, 5)
+        
+        expand_all_btn = QPushButton("펼치기 모두")
+        expand_all_btn.clicked.connect(self.expand_all_tree)
+        expand_all_btn.setFixedWidth(80)
+        expand_all_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #0078d4;
+                color: white;
+                border: none;
+                padding: 5px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #106ebe;
+            }
+            QPushButton:pressed {
+                background-color: #005a9e;
+            }
+        """)
+        
+        collapse_all_btn = QPushButton("접기 모두")
+        collapse_all_btn.clicked.connect(self.collapse_all_tree)
+        collapse_all_btn.setFixedWidth(80)
+        collapse_all_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #4868ac;
+                color: white;
+                border: none;
+                padding: 5px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #3b5a9a;
+            }
+            QPushButton:pressed {
+                background-color: #2e4b89;
+            }
+        """)
+        
+        tree_control_layout.addWidget(expand_all_btn)
+        tree_control_layout.addWidget(collapse_all_btn)
+        tree_control_layout.addStretch()
+        
+        tree_layout.addLayout(tree_control_layout)
+        
+        # 树形视图
+        self.tree_view = QTreeWidget()
+        self.tree_view.setHeaderLabels(["Key", "Value"])
+        self.tree_view.header().setSectionResizeMode(QHeaderView.Interactive)
+        self.tree_view.setAlternatingRowColors(True)
+        self.tree_view.setStyleSheet("""
+            QTreeWidget {
+                alternate-background-color: #f0f0f0;
+            }
+        """)
+        
+        # 连接树形视图的点击事件
+        self.tree_view.itemClicked.connect(self.on_tree_item_clicked)
+        
+        tree_layout.addWidget(self.tree_view)
+        
+        self.output_splitter.addWidget(self.output_text)
+        self.output_splitter.addWidget(tree_container)
+        self.output_splitter.setSizes([400, 400])
+        
+        self.output_layout.addWidget(self.output_splitter)
         
         # 添加到分割器
         self.content_area.addWidget(input_widget)
-        self.content_area.addWidget(output_widget)
+        self.content_area.addWidget(self.output_widget)
         self.content_area.setSizes([500, 500])
     
     def create_status_bar(self):
@@ -315,6 +397,9 @@ class JSONFormatterTool(BaseTool):
             self.output_text.clear()
             self.output_text.setPlainText(formatted_json)
             
+            # 更新树形视图
+            self.update_tree_view(json_obj)
+            
             self.status_bar.setText("JSON格式化完成")
             
         except ValueError as e:
@@ -323,6 +408,57 @@ class JSONFormatterTool(BaseTool):
         except Exception as e:
             self.show_message("错误", f"格式化失败: {str(e)}", "error")
             self.status_bar.setText("格式化失败")
+    
+    def update_tree_view(self, data):
+        """更新树形视图"""
+        self.tree_view.clear()
+        if data is not None:
+            self.add_tree_items(self.tree_view, data)
+            self.tree_view.expandAll()
+            self.tree_view.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            self.tree_view.header().setSectionResizeMode(1, QHeaderView.Stretch)
+    
+    def add_tree_items(self, parent, data, key=""):
+        """递归添加树形项目"""
+        if isinstance(data, dict):
+            for k, v in data.items():
+                item = QTreeWidgetItem(parent)
+                item.setText(0, str(k))
+                if isinstance(v, (dict, list)):
+                    item.setText(1, "..." if isinstance(v, dict) else f"[{len(v)} items]")
+                    self.add_tree_items(item, v, k)
+                else:
+                    item.setText(1, str(v) if v is not None else "null")
+                    # 设置不可展开的项
+                    item.setChildIndicatorPolicy(QTreeWidgetItem.DontShowIndicatorWhenChildless)
+        elif isinstance(data, list):
+            for i, v in enumerate(data):
+                item = QTreeWidgetItem(parent)
+                item.setText(0, str(i))
+                if isinstance(v, (dict, list)):
+                    item.setText(1, "..." if isinstance(v, dict) else f"[{len(v)} items]")
+                    self.add_tree_items(item, v, str(i))
+                else:
+                    item.setText(1, str(v) if v is not None else "null")
+                    # 设置不可展开的项
+                    item.setChildIndicatorPolicy(QTreeWidgetItem.DontShowIndicatorWhenChildless)
+    
+    def on_tree_item_clicked(self, item, column):
+        """处理树形项目点击事件"""
+        # 切换展开/折叠状态
+        if item.childCount() > 0:
+            if item.isExpanded():
+                item.setExpanded(False)
+            else:
+                item.setExpanded(True)
+    
+    def expand_all_tree(self):
+        """展开所有树节点"""
+        self.tree_view.expandAll()
+    
+    def collapse_all_tree(self):
+        """折叠所有树节点"""
+        self.tree_view.collapseAll()
     
     def compress_json(self):
         """压缩JSON"""
@@ -337,6 +473,9 @@ class JSONFormatterTool(BaseTool):
             
             self.output_text.clear()
             self.output_text.setPlainText(compressed_json)
+            
+            # 更新树形视图
+            self.update_tree_view(json_obj)
             
             self.status_bar.setText("JSON压缩完成")
             
@@ -370,6 +509,7 @@ class JSONFormatterTool(BaseTool):
         """清空所有内容"""
         self.input_text.clear()
         self.output_text.clear()
+        self.tree_view.clear()
         self.status_bar.setText("已清空")
     
     def open_file(self):
@@ -434,7 +574,7 @@ class JSONFormatterTool(BaseTool):
         title_label.setStyleSheet("""
             QLabel {
                 font-weight: bold;
-                font-size: 12px;
+                font-size: 14px;
                 color: #d13438;
             }
         """)
