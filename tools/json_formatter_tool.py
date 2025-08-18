@@ -248,7 +248,7 @@ class JSONFormatterTool(BaseTool):
         tree_control_layout = QHBoxLayout()
         tree_control_layout.setContentsMargins(0, 0, 0, 5)
         
-        expand_all_btn = QPushButton("펼치기 모두")
+        expand_all_btn = QPushButton("展开全部")
         expand_all_btn.clicked.connect(self.expand_all_tree)
         expand_all_btn.setFixedWidth(80)
         expand_all_btn.setStyleSheet("""
@@ -269,7 +269,7 @@ class JSONFormatterTool(BaseTool):
             }
         """)
         
-        collapse_all_btn = QPushButton("접기 모두")
+        collapse_all_btn = QPushButton("快速折叠")
         collapse_all_btn.clicked.connect(self.collapse_all_tree)
         collapse_all_btn.setFixedWidth(80)
         collapse_all_btn.setStyleSheet("""

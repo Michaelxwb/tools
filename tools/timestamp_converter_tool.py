@@ -203,11 +203,12 @@ class TimestampConverterTool(BaseTool):
         self.datetime_converter_group = QGroupBox("时间转Unix时间戳")
         group_layout = QVBoxLayout(self.datetime_converter_group)
         group_layout.setContentsMargins(15, 15, 15, 15)
+        group_layout.setSpacing(10)
         
         # 输入行
         input_frame = QWidget()
         input_layout = QHBoxLayout(input_frame)
-        input_layout.setContentsMargins(0, 0, 0, 15)
+        input_layout.setContentsMargins(0, 0, 0, 0)
         
         label = QLabel("时间转Unix时间戳(年-月-日 时:分:秒)")
         font = QFont()
@@ -249,6 +250,7 @@ class TimestampConverterTool(BaseTool):
         result_frame = QWidget()
         result_layout = QHBoxLayout(result_frame)
         result_layout.setContentsMargins(0, 0, 0, 0)
+        result_layout.setSpacing(10)
         
         # 时间单位选择
         unit_group = QButtonGroup()
@@ -261,12 +263,12 @@ class TimestampConverterTool(BaseTool):
         # 将毫秒单选按钮保存为实例变量
         self.milliseconds_radio = millisecond_radio
         
-        # 单位选择布局
-        unit_layout = QHBoxLayout()
-        unit_layout.setContentsMargins(0, 0, 0, 0)
-        unit_layout.addWidget(second_radio)
-        unit_layout.addWidget(millisecond_radio)
-        unit_layout.addStretch()
+        # 单位选择标签和控件
+        unit_label = QLabel("单位:")
+        unit_label.setFixedWidth(40)
+        
+        second_radio.setFixedWidth(40)
+        millisecond_radio.setFixedWidth(60)
         
         # 结果显示框
         self.datetime_result_entry = QLineEdit()
@@ -297,7 +299,9 @@ class TimestampConverterTool(BaseTool):
         """)
         
         # 将组件添加到结果布局
-        result_layout.addLayout(unit_layout)
+        result_layout.addWidget(unit_label)
+        result_layout.addWidget(second_radio)
+        result_layout.addWidget(millisecond_radio)
         result_layout.addWidget(self.datetime_result_entry)
         result_layout.addWidget(copy_result_btn)
         result_layout.addStretch()
