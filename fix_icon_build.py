@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-JSON格式化工具构建脚本
+开发者工具集构建脚本
 自动处理图标并构建exe文件
 """
 
@@ -85,7 +85,7 @@ a = Analysis(
     pathex=['{current_dir.replace(chr(92), '/')}'],
     binaries=[],
     datas={datas_str},
-    hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'tools.json_formatter_tool', 'tools.timestamp_converter_tool', 'tools.base_tool'],
+    hiddenimports=['PyQt5', 'PyQt5.QtWidgets', 'PyQt5.QtCore', 'PyQt5.QtGui', 'tools.json_formatter_tool', 'tools.timestamp_converter_tool', 'tools.base_tool'],
     hookspath=[],
     hooksconfig={{}},
     runtime_hooks=[],
@@ -159,13 +159,18 @@ def build_with_multiple_methods():
 def build_with_spec(spec_file):
     """使用spec文件构建"""
     try:
-        # 清理旧文件
-        cleanup_old_files()
+        # 清理旧文件（除了即将使用的spec文件）
+        cleanup_old_files(exclude_spec=True)
         
         cmd = [sys.executable, "-m", "PyInstaller", spec_file, "--clean"]
         print(f"执行命令: {' '.join(cmd)}")
         
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True, cwd='.')
+        # 使用stdout和stderr参数以便更好地捕获错误信息
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd='.')
+        if result.returncode != 0:
+            print(f"❌ 构建失败，错误信息:")
+            print(result.stderr)
+            return False
         
         if check_build_result():
             print("✅ spec文件构建成功")
@@ -192,13 +197,21 @@ def build_with_absolute_path():
             "--windowed", 
             "--clean",
             f"--icon={icon_path}",
-            "--name=JSON格式化工具",
-            "json_formatter.py"
+            "--name=开发者工具集",
+            "--hidden-import=PyQt5",
+            "--hidden-import=PyQt5.QtWidgets", 
+            "--hidden-import=PyQt5.QtCore",
+            "--hidden-import=PyQt5.QtGui",
+            "toolkit_main.py"
         ]
         
         print(f"执行命令: {' '.join(cmd)}")
         
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"❌ 构建失败，错误信息:")
+            print(result.stderr)
+            return False
         
         if check_build_result():
             print("✅ 绝对路径构建成功")
@@ -217,21 +230,33 @@ def build_with_workdir():
     try:
         cleanup_old_files()
         
+        current_dir = os.getcwd()
+        icon_path = os.path.join(current_dir, 'icon.ico')
+        
         cmd = [
             sys.executable, "-m", "PyInstaller",
             "--onefile",
             "--windowed",
-            "--clean", 
-            "--icon=./icon.ico",
-            "--name=JSON格式化工具",
-            "json_formatter.py"
+            "--clean",
+            f"--icon={icon_path}",
+            "--name=开发者工具集",
+            "--hidden-import=PyQt5",
+            "--hidden-import=PyQt5.QtWidgets",
+            "--hidden-import=PyQt5.QtCore",
+            "--hidden-import=PyQt5.QtGui",
+            "--workpath", os.path.join(current_dir, "build"),
+            "--distpath", os.path.join(current_dir, "dist"),
+            "--specpath", current_dir,
+            "toolkit_main.py"
         ]
         
         print(f"执行命令: {' '.join(cmd)}")
         
-        # 明确指定工作目录
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True, 
-                              cwd=os.getcwd())
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"❌ 构建失败，错误信息:")
+            print(result.stderr)
+            return False
         
         if check_build_result():
             print("✅ 工作目录构建成功")
@@ -245,76 +270,83 @@ def build_with_workdir():
         return False
 
 
-def cleanup_old_files():
-    """清理旧文件"""
-    dirs_to_clean = ['build', 'dist', '__pycache__']
-    files_to_clean = [f for f in os.listdir('.') if f.endswith('.spec')]
+def cleanup_old_files(exclude_spec=False):
+    """清理旧的构建文件"""
+    print("🧹 清理旧文件...")
     
-    for dir_name in dirs_to_clean:
-        if os.path.exists(dir_name):
-            shutil.rmtree(dir_name)
-            print(f"🗑️ 清理目录: {dir_name}")
+    # 清理build目录
+    if os.path.exists("build"):
+        try:
+            shutil.rmtree("build")
+            print("   清理build目录")
+        except Exception as e:
+            print(f"   清理build目录失败: {e}")
     
-    for file_name in files_to_clean:
-        if 'fixed' not in file_name:  # 保留我们的修复版spec
-            os.remove(file_name)
-            print(f"🗑️ 清理文件: {file_name}")
+    # 清理dist目录
+    if os.path.exists("dist"):
+        try:
+            shutil.rmtree("dist")
+            print("   清理dist目录")
+        except Exception as e:
+            print(f"   清理dist目录失败: {e}")
+    
+    # 清理spec文件（除非要排除当前使用的spec文件）
+    if not exclude_spec:
+        spec_files = ["json_formatter_fixed.spec"]
+        for spec_file in spec_files:
+            if os.path.exists(spec_file):
+                try:
+                    os.remove(spec_file)
+                    print(f"   清理{spec_file}")
+                except Exception as e:
+                    print(f"   清理{spec_file}失败: {e}")
 
 
 def check_build_result():
     """检查构建结果"""
-    exe_path = "dist/开发者工具集.exe"
+    exe_path = os.path.join("dist", "开发者工具集.exe")
     if os.path.exists(exe_path):
-        file_size = os.path.getsize(exe_path) / (1024 * 1024)
-        print(f"📁 exe文件: {exe_path}")
-        print(f"📊 文件大小: {file_size:.1f} MB")
+        file_size = os.path.getsize(exe_path)
+        print(f"✅ 构建成功: {exe_path}")
+        print(f"   文件大小: {file_size / 1024 / 1024:.1f} MB")
         return True
-    return False
+    else:
+        print("❌ 构建失败: 未找到生成的exe文件")
+        return False
 
 
 def main():
     """主函数"""
-    print("=" * 60)
-    print("🚀 开发者工具集 - 构建程序")
-    print("=" * 60)
+    print("=" * 50)
+    print("开发者工具集构建脚本")
+    print("=" * 50)
     
     # 检查必要文件
-    if not os.path.exists("toolkit_main.py"):
-        print("❌ 找不到toolkit_main.py")
+    required_files = ["toolkit_main.py", "icon.png"]
+    missing_files = []
+    
+    for file in required_files:
+        if not os.path.exists(file):
+            missing_files.append(file)
+    
+    if missing_files:
+        print(f"❌ 缺少必要文件: {', '.join(missing_files)}")
         return False
     
-    if not os.path.exists("icon.png"):
-        print("❌ 找不到icon.png文件")
-        return False
-    
-    # 检查PyInstaller
-    try:
-        result = subprocess.run([sys.executable, "-m", "PyInstaller", "--version"], 
-                              capture_output=True, text=True, check=True)
-        print(f"✅ PyInstaller版本: {result.stdout.strip()}")
-    except:
-        print("❌ PyInstaller不可用")
-        return False
-    
-    # 创建高质量ICO文件
+    # 创建高质量图标
     if not create_high_quality_ico():
+        print("❌ 图标创建失败")
         return False
     
-    # 尝试多种构建方法
+    # 开始构建
     if build_with_multiple_methods():
-        print("\n🎉 构建成功！")
-        print("📁 exe文件位置: dist/开发者工具集.exe")
-        print("\n💡 如果图标仍未显示:")
-        print("1. 运行 清理图标缓存.bat")
-        print("2. 重启文件管理器")
-        print("3. 等待几分钟让Windows更新缓存")
+        print("\n🎉 所有构建任务完成!")
         return True
     else:
-        print("\n❌ 构建失败")
-        print("建议运行 python 诊断图标问题.py 进行详细诊断")
+        print("\n💥 构建失败!")
         return False
 
 
 if __name__ == "__main__":
     success = main()
-    input(f"\n{'构建完成' if success else '构建失败'}，按回车键退出...")
+    sys.exit(0 if success else 1)

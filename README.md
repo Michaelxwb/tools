@@ -30,15 +30,16 @@
 - 工具间快速切换
 - 可拖拽分割窗口
 - 详细错误提示
+- 改进的按钮样式和视觉效果
 
 ## 使用方法
 
 ### 方法一：直接运行
-1. 双击 `JSON格式化工具.exe` 直接运行
+1. 双击 `开发者工具集.exe` 直接运行
 
 ### 方法二：安装到桌面
 1. 双击 `install.bat` 运行安装脚本
-2. 程序将安装到桌面的"JSON格式化工具"文件夹中
+2. 程序将安装到桌面的"开发者工具集"文件夹中
 
 ## 界面说明
 
@@ -60,7 +61,7 @@
 
 ### 技术栈
 - Python 3.x
-- tkinter (GUI框架)
+- PyQt5 (GUI框架)
 - json (JSON处理)
 - PyInstaller (打包工具)
 
@@ -133,16 +134,16 @@ python toolkit_main.py
 ### 工具开发示例
 ```python
 from .base_tool import BaseTool
-import tkinter as tk
-from tkinter import ttk
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 class MyTool(BaseTool):
     def setup_ui(self):
-        self.main_frame = ttk.Frame(self.parent_frame, padding="20")
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        self.main_widget = QWidget(self.parent_widget)
+        layout = QVBoxLayout(self.main_widget)
         
         # 添加你的UI组件
-        ttk.Label(self.main_frame, text="我的工具").pack()
+        label = QLabel("我的工具")
+        layout.addWidget(label)
 ```
 
 ### 工具特性
@@ -162,6 +163,12 @@ class MyTool(BaseTool):
 MIT License
 
 ## 更新日志
+
+### v2.0.0 - PyQt5重构版
+- 🔄 重构为PyQt5界面框架，提供更现代化的用户界面
+- 🎨 改进按钮样式和视觉效果，提升用户体验
+- ✅ 保持所有原有功能不变
+- 🚀 更好的跨平台兼容性和性能
 
 ### v1.0.0 - 工具集重构版
 - 🔄 重构为工具集架构，支持多工具集成

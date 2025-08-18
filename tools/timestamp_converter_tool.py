@@ -4,8 +4,11 @@
 时间戳转换工具
 """
 
-import tkinter as tk
-from tkinter import ttk
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
+                             QLabel, QLineEdit, QGroupBox, QRadioButton, 
+                             QFrame, QSizePolicy, QButtonGroup)
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QFont
 import time
 import datetime
 from .base_tool import BaseTool
@@ -16,196 +19,337 @@ class TimestampConverterTool(BaseTool):
     
     def setup_ui(self):
         """设置用户界面"""
-        # 主框架
-        self.main_frame = ttk.Frame(self.parent_frame, padding="20")
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        # 主窗口部件
+        self.main_widget = QWidget(self.parent_widget)
+        main_layout = QVBoxLayout(self.main_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
         
         # 初始化更新标志
         self.is_updating = True
         
-        # 设置样式
-        self.setup_styles()
-        
         # 创建当前时间显示区域
         self.create_current_time_area()
+        main_layout.addWidget(self.current_time_group)
         
         # 创建时间戳转换区域
         self.create_timestamp_converter_area()
+        main_layout.addWidget(self.timestamp_converter_group)
         
         # 创建时间转时间戳区域
         self.create_datetime_converter_area()
+        main_layout.addWidget(self.datetime_converter_group)
+        
+        # 添加弹性空间
+        main_layout.addStretch()
         
         # 启动时间更新
         self.update_current_time()
     
-    def setup_styles(self):
-        """设置样式"""
-        style = ttk.Style()
-        
-        # 主要功能按钮样式
-        style.configure("Primary.TButton", 
-                       font=('Segoe UI', 10, 'bold'),
-                       foreground='white',
-                       background='#0078d4')
-        
-        # 次要功能按钮样式
-        style.configure("Secondary.TButton",
-                       font=('Segoe UI', 9, 'bold'),
-                       foreground='#323130',
-                       background='#f3f2f1')
-        
-        # 危险操作按钮样式
-        style.configure("Danger.TButton",
-                       font=('Segoe UI', 9, 'bold'),
-                       foreground='white',
-                       background='#d13438')
-        
-        # 配置悬停效果
-        style.map("Primary.TButton",
-                 background=[('active', '#106ebe'), ('pressed', '#005a9e')])
-        style.map("Secondary.TButton",
-                 background=[('active', '#edebe9'), ('pressed', '#e1dfdd')])
-        style.map("Danger.TButton",
-                 background=[('active', '#a4262c'), ('pressed', '#8b1f24')])
-    
     def create_current_time_area(self):
         """创建当前时间显示区域"""
-        current_frame = ttk.LabelFrame(self.main_frame, text="当前时间", padding="15")
-        current_frame.pack(fill=tk.X, pady=(0, 20))
+        self.current_time_group = QGroupBox("当前时间")
+        group_layout = QVBoxLayout(self.current_time_group)
+        group_layout.setContentsMargins(15, 15, 15, 15)
         
         # 当前时间显示
-        time_display_frame = ttk.Frame(current_frame)
-        time_display_frame.pack(fill=tk.X)
+        time_display_frame = QWidget()
+        time_display_layout = QHBoxLayout(time_display_frame)
+        time_display_layout.setContentsMargins(0, 0, 0, 0)
         
-        ttk.Label(time_display_frame, text="当前Unix时间戳:", font=('Segoe UI', 12)).pack(side=tk.LEFT)
+        label = QLabel("当前Unix时间戳:")
+        font = QFont()
+        font.setPointSize(12)
+        label.setFont(font)
+        time_display_layout.addWidget(label)
         
-        self.current_timestamp_var = tk.StringVar()
-        timestamp_label = ttk.Label(time_display_frame, textvariable=self.current_timestamp_var, 
-                                   font=('Consolas', 12, 'bold'), foreground='#0078d4')
-        timestamp_label.pack(side=tk.LEFT, padx=(10, 0))
+        self.current_timestamp_label = QLabel()
+        self.current_timestamp_label.setFont(QFont("Consolas", 12, QFont.Bold))
+        self.current_timestamp_label.setStyleSheet("color: #0078d4; font-size: 15px;")
+        time_display_layout.addWidget(self.current_timestamp_label)
+        time_display_layout.addStretch()
         
         # 停止和复制按钮
-        button_frame = ttk.Frame(time_display_frame)
-        button_frame.pack(side=tk.RIGHT)
+        self.stop_btn = QPushButton("⏸️ 停止")
+        self.stop_btn.clicked.connect(self.toggle_update)
+        self.stop_btn.setFixedWidth(100)
+        self.stop_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #d13438;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #a4262c;
+            }
+            QPushButton:pressed {
+                background-color: #8b1f24;
+            }
+        """)
+        time_display_layout.addWidget(self.stop_btn)
         
-        self.stop_btn = ttk.Button(button_frame, text="⏸️ 停止", command=self.toggle_update, 
-                                  width=10, style="Danger.TButton")
-        self.stop_btn.pack(side=tk.LEFT, padx=5)
+        copy_btn = QPushButton("📋 复制")
+        copy_btn.clicked.connect(self.copy_current_timestamp)
+        copy_btn.setFixedWidth(100)
+        copy_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #881798;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #721481;
+            }
+            QPushButton:pressed {
+                background-color: #5c106a;
+            }
+        """)
+        time_display_layout.addWidget(copy_btn)
         
-        copy_btn = ttk.Button(button_frame, text="📋 复制", 
-                             command=lambda: self.copy_current_timestamp(), 
-                             width=10, style="Secondary.TButton")
-        copy_btn.pack(side=tk.LEFT, padx=5)
+        group_layout.addWidget(time_display_frame)
     
     def create_timestamp_converter_area(self):
         """创建时间戳转换区域"""
-        ts_frame = ttk.LabelFrame(self.main_frame, text="Unix时间戳转换", padding="15")
-        ts_frame.pack(fill=tk.X, pady=(0, 20))
+        self.timestamp_converter_group = QGroupBox("Unix时间戳转换")
+        group_layout = QVBoxLayout(self.timestamp_converter_group)
+        group_layout.setContentsMargins(15, 15, 15, 15)
         
         # 输入行
-        input_frame = ttk.Frame(ts_frame)
-        input_frame.pack(fill=tk.X, pady=(0, 15))
+        input_frame = QWidget()
+        input_layout = QHBoxLayout(input_frame)
+        input_layout.setContentsMargins(0, 0, 0, 15)
         
-        ttk.Label(input_frame, text="Unix时间戳", font=('Segoe UI', 12)).pack(side=tk.LEFT)
+        label = QLabel("Unix时间戳")
+        font = QFont()
+        font.setPointSize(12)
+        label.setFont(font)
+        input_layout.addWidget(label)
         
-        self.timestamp_entry = ttk.Entry(input_frame, font=('Consolas', 12), width=15)
-        self.timestamp_entry.pack(side=tk.LEFT, padx=(20, 10))
+        self.timestamp_entry = QLineEdit()
+        self.timestamp_entry.setFont(QFont("Consolas", 12))
+        self.timestamp_entry.setFixedWidth(150)
+        input_layout.addWidget(self.timestamp_entry)
         
-        convert_btn = ttk.Button(input_frame, text="🔄 转换", command=self.convert_timestamp, 
-                                width=10, style="Primary.TButton")
-        convert_btn.pack(side=tk.LEFT, padx=5)
+        convert_btn = QPushButton("🔄 转换")
+        convert_btn.clicked.connect(self.convert_timestamp)
+        convert_btn.setFixedWidth(100)
+        convert_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #0078d4;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #106ebe;
+            }
+            QPushButton:pressed {
+                background-color: #005a9e;
+            }
+        """)
+        input_layout.addWidget(convert_btn)
+        input_layout.addStretch()
+        
+        group_layout.addWidget(input_frame)
         
         # 结果显示
-        result_frame = ttk.Frame(ts_frame)
-        result_frame.pack(fill=tk.X)
+        result_frame = QWidget()
+        result_layout = QHBoxLayout(result_frame)
+        result_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.timestamp_result_var = tk.StringVar()
-        result_entry = ttk.Entry(result_frame, textvariable=self.timestamp_result_var, 
-                                font=('Consolas', 12), state='readonly', width=25)
-        result_entry.pack(side=tk.LEFT, padx=(20, 10))
+        self.timestamp_result_entry = QLineEdit()
+        self.timestamp_result_entry.setFont(QFont("Consolas", 12))
+        self.timestamp_result_entry.setReadOnly(True)
+        self.timestamp_result_entry.setFixedWidth(250)
+        result_layout.addWidget(self.timestamp_result_entry)
         
-        copy_result_btn = ttk.Button(result_frame, text="📋 复制", 
-                                    command=lambda: self.copy_to_clipboard(self.timestamp_result_var.get()), 
-                                    width=10, style="Secondary.TButton")
-        copy_result_btn.pack(side=tk.LEFT, padx=5)
+        copy_result_btn = QPushButton("📋 复制")
+        copy_result_btn.clicked.connect(lambda: self.copy_to_clipboard(self.timestamp_result_entry.text()))
+        copy_result_btn.setFixedWidth(100)
+        copy_result_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #881798;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #721481;
+            }
+            QPushButton:pressed {
+                background-color: #5c106a;
+            }
+        """)
+        result_layout.addWidget(copy_result_btn)
+        result_layout.addStretch()
+        
+        group_layout.addWidget(result_frame)
     
     def create_datetime_converter_area(self):
         """创建时间转时间戳区域"""
-        dt_frame = ttk.LabelFrame(self.main_frame, text="时间转Unix时间戳", padding="15")
-        dt_frame.pack(fill=tk.X, pady=(0, 20))
+        self.datetime_converter_group = QGroupBox("时间转Unix时间戳")
+        group_layout = QVBoxLayout(self.datetime_converter_group)
+        group_layout.setContentsMargins(15, 15, 15, 15)
         
         # 输入行
-        input_frame = ttk.Frame(dt_frame)
-        input_frame.pack(fill=tk.X, pady=(0, 15))
+        input_frame = QWidget()
+        input_layout = QHBoxLayout(input_frame)
+        input_layout.setContentsMargins(0, 0, 0, 15)
         
-        ttk.Label(input_frame, text="时间转Unix时间戳(年-月-日 时:分:秒)", font=('Segoe UI', 12)).pack(side=tk.LEFT)
+        label = QLabel("时间转Unix时间戳(年-月-日 时:分:秒)")
+        font = QFont()
+        font.setPointSize(12)
+        label.setFont(font)
+        input_layout.addWidget(label)
         
-        self.datetime_entry = ttk.Entry(input_frame, font=('Consolas', 12), width=20)
-        self.datetime_entry.pack(side=tk.LEFT, padx=(20, 10))
+        self.datetime_entry = QLineEdit()
+        self.datetime_entry.setFont(QFont("Consolas", 12))
+        self.datetime_entry.setFixedWidth(200)
+        input_layout.addWidget(self.datetime_entry)
         
-        convert_dt_btn = ttk.Button(input_frame, text="🔄 转换", command=self.convert_datetime, 
-                                   width=10, style="Primary.TButton")
-        convert_dt_btn.pack(side=tk.LEFT, padx=5)
+        convert_dt_btn = QPushButton("🔄 转换")
+        convert_dt_btn.clicked.connect(self.convert_datetime)
+        convert_dt_btn.setFixedWidth(100)
+        convert_dt_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #0078d4;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #106ebe;
+            }
+            QPushButton:pressed {
+                background-color: #005a9e;
+            }
+        """)
+        input_layout.addWidget(convert_dt_btn)
+        input_layout.addStretch()
+        
+        group_layout.addWidget(input_frame)
         
         # 结果显示
-        result_frame = ttk.Frame(dt_frame)
-        result_frame.pack(fill=tk.X)
+        result_frame = QWidget()
+        result_layout = QHBoxLayout(result_frame)
+        result_layout.setContentsMargins(0, 0, 0, 15)
         
-        self.datetime_result_var = tk.StringVar()
-        result_entry = ttk.Entry(result_frame, textvariable=self.datetime_result_var, 
-                                font=('Consolas', 12), state='readonly', width=15)
-        result_entry.pack(side=tk.LEFT, padx=(20, 10))
+        self.datetime_result_entry = QLineEdit()
+        self.datetime_result_entry.setFont(QFont("Consolas", 12))
+        self.datetime_result_entry.setReadOnly(True)
+        self.datetime_result_entry.setFixedWidth(150)
+        result_layout.addWidget(self.datetime_result_entry)
         
-        copy_dt_result_btn = ttk.Button(result_frame, text="📋 复制", 
-                                       command=lambda: self.copy_to_clipboard(self.datetime_result_var.get()), 
-                                       width=10, style="Secondary.TButton")
-        copy_dt_result_btn.pack(side=tk.LEFT, padx=5)
+        copy_dt_result_btn = QPushButton("📋 复制")
+        copy_dt_result_btn.clicked.connect(lambda: self.copy_to_clipboard(self.datetime_result_entry.text()))
+        copy_dt_result_btn.setFixedWidth(100)
+        copy_dt_result_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #881798;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #721481;
+            }
+            QPushButton:pressed {
+                background-color: #5c106a;
+            }
+        """)
+        result_layout.addWidget(copy_dt_result_btn)
+        result_layout.addStretch()
+        
+        group_layout.addWidget(result_frame)
         
         # 时间单位选择
-        unit_frame = ttk.Frame(dt_frame)
-        unit_frame.pack(fill=tk.X, pady=(15, 0))
+        unit_frame = QWidget()
+        unit_layout = QHBoxLayout(unit_frame)
+        unit_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.time_unit = tk.StringVar(value="秒")
+        self.time_unit_group = QButtonGroup()
         
-        ttk.Radiobutton(unit_frame, text="秒", variable=self.time_unit, value="秒").pack(side=tk.LEFT, padx=10)
-        ttk.Radiobutton(unit_frame, text="毫秒", variable=self.time_unit, value="毫秒").pack(side=tk.LEFT, padx=10)
+        self.seconds_radio = QRadioButton("秒")
+        self.milliseconds_radio = QRadioButton("毫秒")
+        self.seconds_radio.setChecked(True)
         
-        copy_unit_btn = ttk.Button(unit_frame, text="📋 复制", 
-                                  command=self.copy_with_unit, width=10, style="Secondary.TButton")
-        copy_unit_btn.pack(side=tk.LEFT, padx=(20, 0))
+        self.time_unit_group.addButton(self.seconds_radio)
+        self.time_unit_group.addButton(self.milliseconds_radio)
+        
+        unit_layout.addWidget(self.seconds_radio)
+        unit_layout.addWidget(self.milliseconds_radio)
+        
+        copy_unit_btn = QPushButton("📋 复制")
+        copy_unit_btn.clicked.connect(self.copy_with_unit)
+        copy_unit_btn.setFixedWidth(100)
+        copy_unit_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #881798;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #721481;
+            }
+            QPushButton:pressed {
+                background-color: #5c106a;
+            }
+        """)
+        unit_layout.addWidget(copy_unit_btn)
+        unit_layout.addStretch()
+        
+        group_layout.addWidget(unit_frame)
     
     def update_current_time(self):
         """更新当前时间显示"""
-        try:
-            if self.is_updating and hasattr(self, 'current_timestamp_var'):
-                current_timestamp = int(time.time())
-                self.current_timestamp_var.set(str(current_timestamp))
-            
-            # 每秒更新一次
-            if hasattr(self, 'parent_frame') and self.parent_frame.winfo_exists():
-                self.parent_frame.after(1000, self.update_current_time)
-        except (tk.TclError, AttributeError):
-            # 如果组件已被销毁，停止更新
-            pass
+        if self.is_updating and hasattr(self, 'current_timestamp_label'):
+            current_timestamp = int(time.time())
+            self.current_timestamp_label.setText(str(current_timestamp))
+        
+        # 每秒更新一次
+        QTimer.singleShot(1000, self.update_current_time)
     
     def toggle_update(self):
         """切换时间更新状态"""
         self.is_updating = not self.is_updating
         if self.is_updating:
-            self.stop_btn.config(text="⏸️ 停止")
+            self.stop_btn.setText("⏸️ 停止")
         else:
-            self.stop_btn.config(text="▶️ 开始")
+            self.stop_btn.setText("▶️ 开始")
     
     def copy_current_timestamp(self):
         """复制当前时间戳"""
-        timestamp = self.current_timestamp_var.get()
+        timestamp = self.current_timestamp_label.text()
         if self.copy_to_clipboard(timestamp):
             self.show_message("成功", "当前时间戳已复制到剪贴板")
     
     def convert_timestamp(self):
         """转换时间戳为可读时间"""
         try:
-            timestamp_str = self.timestamp_entry.get().strip()
+            timestamp_str = self.timestamp_entry.text().strip()
             if not timestamp_str:
                 self.show_message("警告", "请输入时间戳", "warning")
                 return
@@ -221,7 +365,7 @@ class TimestampConverterTool(BaseTool):
             dt = datetime.datetime.fromtimestamp(timestamp)
             readable_time = dt.strftime("%Y-%m-%d %H:%M:%S")
             
-            self.timestamp_result_var.set(readable_time)
+            self.timestamp_result_entry.setText(readable_time)
             
         except ValueError:
             self.show_message("错误", "请输入有效的时间戳数字", "error")
@@ -233,7 +377,7 @@ class TimestampConverterTool(BaseTool):
     def convert_datetime(self):
         """转换时间为时间戳"""
         try:
-            datetime_str = self.datetime_entry.get().strip()
+            datetime_str = self.datetime_entry.text().strip()
             if not datetime_str:
                 self.show_message("警告", "请输入时间", "warning")
                 return
@@ -264,17 +408,17 @@ class TimestampConverterTool(BaseTool):
             timestamp = int(dt.timestamp())
             
             # 根据用户选择的单位调整时间戳
-            if self.time_unit.get() == "毫秒":
+            if self.milliseconds_radio.isChecked():
                 timestamp = timestamp * 1000
             
-            self.datetime_result_var.set(str(timestamp))
+            self.datetime_result_entry.setText(str(timestamp))
             
         except Exception as e:
             self.show_message("错误", f"转换失败: {str(e)}", "error")
     
     def copy_with_unit(self):
         """根据选择的单位复制时间戳"""
-        timestamp_str = self.datetime_result_var.get()
+        timestamp_str = self.datetime_result_entry.text()
         if not timestamp_str:
             self.show_message("警告", "请先转换时间", "warning")
             return
@@ -282,13 +426,13 @@ class TimestampConverterTool(BaseTool):
         try:
             timestamp = int(timestamp_str)
             
-            if self.time_unit.get() == "毫秒":
+            if self.milliseconds_radio.isChecked():
                 result = str(timestamp * 1000)
             else:
                 result = timestamp_str
             
             if self.copy_to_clipboard(result):
-                unit_text = self.time_unit.get()
+                unit_text = "毫秒" if self.milliseconds_radio.isChecked() else "秒"
                 self.show_message("成功", f"时间戳({unit_text})已复制到剪贴板")
         
         except ValueError:

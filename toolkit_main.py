@@ -5,19 +5,22 @@
 集成多种开发常用工具
 """
 
-import tkinter as tk
-from tkinter import ttk
-import os
 import sys
+import os
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+                             QHBoxLayout, QPushButton, QFrame, QSizePolicy,
+                             QButtonGroup, QLabel)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from tools.json_formatter_tool import JSONFormatterTool
 from tools.timestamp_converter_tool import TimestampConverterTool
 
 
-class DeveloperToolkit:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("开发者工具集")
-        self.root.geometry("1200x800")
+class DeveloperToolkit(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("开发者工具集")
+        self.setGeometry(100, 100, 1200, 800)
         
         # 初始化工具实例字典
         self.tools = {}
@@ -54,20 +57,8 @@ class DeveloperToolkit:
                 for icon_path in paths_to_try:
                     if os.path.exists(icon_path):
                         try:
-                            if icon_path.endswith('.ico'):
-                                self.root.iconbitmap(icon_path)
-                                return
-                            elif icon_path.endswith('.png'):
-                                try:
-                                    from PIL import Image, ImageTk
-                                    img = Image.open(icon_path)
-                                    img = img.resize((32, 32), Image.Resampling.LANCZOS)
-                                    photo = ImageTk.PhotoImage(img)
-                                    self.root.iconphoto(True, photo)
-                                    self.root._icon_photo = photo
-                                    return
-                                except ImportError:
-                                    pass
+                            self.setWindowIcon(QIcon(icon_path))
+                            return
                         except Exception:
                             continue
         except Exception:
@@ -75,67 +66,90 @@ class DeveloperToolkit:
     
     def setup_styles(self):
         """设置样式"""
-        style = ttk.Style()
-        style.theme_use('clam')
-        
-        # 工具选择按钮样式
-        style.configure("Tool.TButton",
-                       font=('Segoe UI', 11, 'bold'),
-                       padding=(20, 10))
-        
-        # 选中的工具按钮样式
-        style.configure("SelectedTool.TButton",
-                       font=('Segoe UI', 11, 'bold'),
-                       padding=(20, 10),
-                       background='#0078d4',
-                       foreground='white')
-        
-        # 标题样式
-        style.configure("Title.TLabel",
-                       font=('Segoe UI', 16, 'bold'),
-                       foreground='#323130')
+        # 设置应用程序样式
+        font = QFont("Segoe UI", 9)
+        QApplication.setFont(font)
     
     def setup_ui(self):
         """创建用户界面"""
-        # 主框架
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # 主窗口部件
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
         
         # 工具选择区域
-        tool_frame = ttk.Frame(main_frame)
-        tool_frame.pack(fill=tk.X, pady=(0, 10))
+        tool_frame = QWidget()
+        tool_layout = QHBoxLayout(tool_frame)
+        tool_layout.setContentsMargins(0, 0, 0, 10)
         
-        ttk.Label(tool_frame, text="选择工具:", font=('Segoe UI', 12, 'bold')).pack(side=tk.LEFT, padx=(0, 10))
+        label = QLabel("选择工具:")
+        font = QFont("Segoe UI", 12, QFont.Bold)
+        label.setFont(font)
+        tool_layout.addWidget(label)
         
         # 工具按钮
         self.tool_buttons = {}
         
         # JSON格式化工具按钮
-        json_btn = ttk.Button(tool_frame, text="📝 JSON格式化", 
-                             command=lambda: self.switch_tool('json_formatter'),
-                             style="Tool.TButton")
-        json_btn.pack(side=tk.LEFT, padx=5)
+        json_btn = QPushButton("📝 JSON格式化")
+        json_btn.clicked.connect(lambda: self.switch_tool('json_formatter'))
+        json_btn.setFixedHeight(40)
+        json_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                font-size: 15px;
+                padding: 10px 20px;
+                border: 2px solid #cccccc;
+                border-radius: 4px;
+                background-color: white;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        tool_layout.addWidget(json_btn)
         self.tool_buttons['json_formatter'] = json_btn
         
         # 时间戳转换工具按钮
-        timestamp_btn = ttk.Button(tool_frame, text="⏰ 时间戳转换", 
-                                  command=lambda: self.switch_tool('timestamp_converter'),
-                                  style="Tool.TButton")
-        timestamp_btn.pack(side=tk.LEFT, padx=5)
+        timestamp_btn = QPushButton("⏰ 时间戳转换")
+        timestamp_btn.clicked.connect(lambda: self.switch_tool('timestamp_converter'))
+        timestamp_btn.setFixedHeight(40)
+        timestamp_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                font-size: 15px;
+                padding: 10px 20px;
+                border: 2px solid #cccccc;
+                border-radius: 4px;
+                background-color: white;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        tool_layout.addWidget(timestamp_btn)
         self.tool_buttons['timestamp_converter'] = timestamp_btn
         
+        tool_layout.addStretch()
+        main_layout.addWidget(tool_frame)
+        
         # 分隔线
-        separator = ttk.Separator(main_frame, orient='horizontal')
-        separator.pack(fill=tk.X, pady=10)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        main_layout.addWidget(separator)
         
         # 工具内容区域
-        self.content_frame = ttk.Frame(main_frame)
-        self.content_frame.pack(fill=tk.BOTH, expand=True)
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.content_widget)
         
         # 默认显示JSON格式化工具
         self.current_tool = None
-        # 延迟初始化，确保界面完全创建后再加载工具
-        self.root.after(100, lambda: self.switch_tool('json_formatter'))
+        self.switch_tool('json_formatter')
     
     def switch_tool(self, tool_name):
         """切换工具"""
@@ -143,33 +157,82 @@ class DeveloperToolkit:
             return
         
         # 清空当前内容
-        for widget in self.content_frame.winfo_children():
-            widget.destroy()
+        for i in reversed(range(self.content_layout.count())):
+            widget = self.content_layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
         
-        # 清空工具缓存，因为父框架已被销毁
+        # 清空工具缓存
         self.tools.clear()
         
         # 更新按钮样式
         for name, button in self.tool_buttons.items():
             if name == tool_name:
-                button.configure(style="SelectedTool.TButton")
+                button.setStyleSheet("""
+                    QPushButton {
+                        font-weight: bold;
+                        font-size: 15px;
+                        padding: 10px 20px;
+                        border: 2px solid #0078d4;
+                        border-radius: 4px;
+                        background-color: #0078d4;
+                        color: white;
+                    }
+                """)
             else:
-                button.configure(style="Tool.TButton")
+                button.setStyleSheet("""
+                    QPushButton {
+                        font-weight: bold;
+                        font-size: 15px;
+                        padding: 10px 20px;
+                        border: 2px solid #cccccc;
+                        border-radius: 4px;
+                        background-color: white;
+                    }
+                    QPushButton:hover {
+                        background-color: #f0f0f0;
+                    }
+                """)
         
         # 创建新工具实例
         if tool_name == 'json_formatter':
-            self.tools[tool_name] = JSONFormatterTool(self.content_frame)
+            self.tools[tool_name] = JSONFormatterTool(self.content_widget)
         elif tool_name == 'timestamp_converter':
-            self.tools[tool_name] = TimestampConverterTool(self.content_frame)
+            self.tools[tool_name] = TimestampConverterTool(self.content_widget)
+        
+        # 添加工具到界面
+        if tool_name in self.tools:
+            self.content_layout.addWidget(self.tools[tool_name].main_widget)
         
         self.current_tool = tool_name
 
 
 def main():
     """主函数"""
-    root = tk.Tk()
-    app = DeveloperToolkit(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    app.setApplicationName("开发者工具集")
+    
+    # 设置样式表
+    app.setStyleSheet("""
+        QMainWindow {
+            background-color: white;
+        }
+        QGroupBox {
+            font-weight: bold;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            margin-top: 1ex;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 5px 0 5px;
+        }
+    """)
+    
+    window = DeveloperToolkit()
+    window.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":

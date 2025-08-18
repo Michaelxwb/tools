@@ -5,9 +5,12 @@ JSON格式化工具
 """
 
 import json
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
 import os
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
+                             QLabel, QTextEdit, QSplitter, QFileDialog, 
+                             QMessageBox, QDialog, QStyle, QFrame, QSizePolicy)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QTextCursor
 from .base_tool import BaseTool
 
 
@@ -16,158 +19,241 @@ class JSONFormatterTool(BaseTool):
     
     def setup_ui(self):
         """设置用户界面"""
-        # 主框架
-        self.main_frame = ttk.Frame(self.parent_frame, padding="5")
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # 配置样式
-        self.setup_styles()
+        # 主窗口部件
+        self.main_widget = QWidget(self.parent_widget)
+        main_layout = QVBoxLayout(self.main_widget)
+        main_layout.setContentsMargins(5, 5, 5, 5)
         
         # 创建按钮区域
         self.create_button_area()
+        main_layout.addWidget(self.button_area)
         
         # 创建内容区域
         self.create_content_area()
+        main_layout.addWidget(self.content_area, 1)
         
         # 创建状态栏
         self.create_status_bar()
-    
-    def setup_styles(self):
-        """设置样式"""
-        style = ttk.Style()
-        
-        # 主要功能按钮样式
-        style.configure("Primary.TButton", 
-                       font=('Segoe UI', 10, 'bold'),
-                       foreground='white',
-                       background='#0078d4')
-        
-        # 次要功能按钮样式
-        style.configure("Secondary.TButton",
-                       font=('Segoe UI', 9, 'bold'),
-                       foreground='#323130',
-                       background='#f3f2f1')
-        
-        # 危险操作按钮样式
-        style.configure("Danger.TButton",
-                       font=('Segoe UI', 9, 'bold'),
-                       foreground='white',
-                       background='#d13438')
-        
-        # 配置悬停效果
-        style.map("Primary.TButton",
-                 background=[('active', '#106ebe'), ('pressed', '#005a9e')])
-        style.map("Secondary.TButton",
-                 background=[('active', '#edebe9'), ('pressed', '#e1dfdd')])
-        style.map("Danger.TButton",
-                 background=[('active', '#a4262c'), ('pressed', '#8b1f24')])
+        main_layout.addWidget(self.status_bar)
     
     def create_button_area(self):
         """创建按钮区域"""
-        button_frame = ttk.Frame(self.main_frame, padding="8")
-        button_frame.pack(fill=tk.X, pady=(0, 12))
+        self.button_area = QWidget()
+        button_layout = QHBoxLayout(self.button_area)
+        button_layout.setContentsMargins(8, 8, 8, 8)
         
         # 居中的按钮容器
-        button_container = ttk.Frame(button_frame)
-        button_container.pack(expand=True)
+        button_container = QWidget()
+        container_layout = QHBoxLayout(button_container)
+        container_layout.addStretch()
         
         # 主要功能按钮组
-        main_group = ttk.Frame(button_container)
-        main_group.pack(side=tk.LEFT, padx=(0, 20))
+        main_group = QWidget()
+        main_group_layout = QHBoxLayout(main_group)
+        main_group_layout.setContentsMargins(0, 0, 0, 0)
         
         # 格式化按钮
-        format_btn = ttk.Button(main_group, text="✨ 格式化", command=self.format_json, 
-                               width=12, style="Primary.TButton")
-        format_btn.pack(side=tk.LEFT, padx=3, pady=2)
+        format_btn = QPushButton("✨ 格式化")
+        format_btn.clicked.connect(self.format_json)
+        format_btn.setFixedWidth(120)
+        format_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #0078d4;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #106ebe;
+            }
+            QPushButton:pressed {
+                background-color: #005a9e;
+            }
+        """)
+        main_group_layout.addWidget(format_btn)
         
         # 压缩按钮
-        compress_btn = ttk.Button(main_group, text="📦 压缩", command=self.compress_json, 
-                                 width=10, style="Secondary.TButton")
-        compress_btn.pack(side=tk.LEFT, padx=3, pady=2)
+        compress_btn = QPushButton("📦 压缩")
+        compress_btn.clicked.connect(self.compress_json)
+        compress_btn.setFixedWidth(100)
+        compress_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #498205;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #3c6a04;
+            }
+            QPushButton:pressed {
+                background-color: #2f5203;
+            }
+        """)
+        main_group_layout.addWidget(compress_btn)
         
         # 验证按钮
-        validate_btn = ttk.Button(main_group, text="✅ 验证", command=self.validate_json, 
-                                 width=10, style="Secondary.TButton")
-        validate_btn.pack(side=tk.LEFT, padx=3, pady=2)
+        validate_btn = QPushButton("✅ 验证")
+        validate_btn.clicked.connect(self.validate_json)
+        validate_btn.setFixedWidth(100)
+        validate_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #4868ac;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #3b5a9a;
+            }
+            QPushButton:pressed {
+                background-color: #2e4b89;
+            }
+        """)
+        main_group_layout.addWidget(validate_btn)
+        
+        container_layout.addWidget(main_group)
         
         # 辅助功能按钮组
-        aux_group = ttk.Frame(button_container)
-        aux_group.pack(side=tk.LEFT)
+        aux_group = QWidget()
+        aux_group_layout = QHBoxLayout(aux_group)
+        aux_group_layout.setContentsMargins(0, 0, 0, 0)
         
         # 清空按钮
-        clear_btn = ttk.Button(aux_group, text="🗑️ 清空", command=self.clear_all, 
-                              width=10, style="Danger.TButton")
-        clear_btn.pack(side=tk.LEFT, padx=3, pady=2)
+        clear_btn = QPushButton("🗑️ 清空")
+        clear_btn.clicked.connect(self.clear_all)
+        clear_btn.setFixedWidth(100)
+        clear_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #d13438;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #a4262c;
+            }
+            QPushButton:pressed {
+                background-color: #8b1f24;
+            }
+        """)
+        aux_group_layout.addWidget(clear_btn)
         
         # 文件操作按钮
-        open_btn = ttk.Button(aux_group, text="📂 打开", command=self.open_file, 
-                             width=10, style="Secondary.TButton")
-        open_btn.pack(side=tk.LEFT, padx=3, pady=2)
+        open_btn = QPushButton("📂 打开")
+        open_btn.clicked.connect(self.open_file)
+        open_btn.setFixedWidth(100)
+        open_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #881798;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #721481;
+            }
+            QPushButton:pressed {
+                background-color: #5c106a;
+            }
+        """)
+        aux_group_layout.addWidget(open_btn)
         
-        save_btn = ttk.Button(aux_group, text="💾 保存", command=self.save_file, 
-                             width=10, style="Secondary.TButton")
-        save_btn.pack(side=tk.LEFT, padx=3, pady=2)
+        save_btn = QPushButton("💾 保存")
+        save_btn.clicked.connect(self.save_file)
+        save_btn.setFixedWidth(100)
+        save_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                background-color: #107c10;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #0e6e0e;
+            }
+            QPushButton:pressed {
+                background-color: #0c5f0c;
+            }
+        """)
+        aux_group_layout.addWidget(save_btn)
+        
+        container_layout.addWidget(aux_group)
+        container_layout.addStretch()
+        button_layout.addWidget(button_container)
     
     def create_content_area(self):
         """创建内容区域"""
-        # 可拖动的分割窗口
-        self.paned_window = ttk.PanedWindow(self.main_frame, orient=tk.HORIZONTAL)
-        self.paned_window.pack(fill=tk.BOTH, expand=True, padx=5)
+        self.content_area = QSplitter(Qt.Horizontal)
         
         # 左侧输入区域
-        input_frame = ttk.LabelFrame(self.paned_window, text="📝 输入JSON", padding="5")
-        input_frame.columnconfigure(0, weight=1)
-        input_frame.rowconfigure(0, weight=1)
+        input_widget = QFrame()
+        input_widget.setFrameStyle(QFrame.StyledPanel)
+        input_layout = QVBoxLayout(input_widget)
+        input_layout.setContentsMargins(5, 5, 5, 5)
+        
+        input_label = QLabel("📝 输入JSON")
+        input_label.setStyleSheet("font-weight: bold;")
+        input_layout.addWidget(input_label)
         
         # 输入文本框
-        self.input_text = tk.Text(input_frame, wrap=tk.WORD, font=('Consolas', 10), 
-                                 relief=tk.FLAT, borderwidth=1)
-        input_scrollbar = ttk.Scrollbar(input_frame, orient=tk.VERTICAL, command=self.input_text.yview)
-        self.input_text.configure(yscrollcommand=input_scrollbar.set)
-        
-        self.input_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        input_scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.input_text = QTextEdit()
+        font = QFont("Consolas", 10)
+        self.input_text.setFont(font)
+        input_layout.addWidget(self.input_text)
         
         # 右侧输出区域
-        output_frame = ttk.LabelFrame(self.paned_window, text="✨ 格式化结果", padding="5")
-        output_frame.columnconfigure(0, weight=1)
-        output_frame.rowconfigure(0, weight=1)
+        output_widget = QFrame()
+        output_widget.setFrameStyle(QFrame.StyledPanel)
+        output_layout = QVBoxLayout(output_widget)
+        output_layout.setContentsMargins(5, 5, 5, 5)
+        
+        output_label = QLabel("✨ 格式化结果")
+        output_label.setStyleSheet("font-weight: bold;")
+        output_layout.addWidget(output_label)
         
         # 输出文本框
-        self.output_text = tk.Text(output_frame, wrap=tk.WORD, font=('Consolas', 10),
-                                  relief=tk.FLAT, borderwidth=1)
-        output_scrollbar = ttk.Scrollbar(output_frame, orient=tk.VERTICAL, command=self.output_text.yview)
-        self.output_text.configure(yscrollcommand=output_scrollbar.set)
+        self.output_text = QTextEdit()
+        self.output_text.setFont(font)
+        self.output_text.setReadOnly(True)
+        output_layout.addWidget(self.output_text)
         
-        self.output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        output_scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        
-        # 将左右面板添加到分割窗口
-        self.paned_window.add(input_frame, weight=1)
-        self.paned_window.add(output_frame, weight=1)
-        
-        # 设置初始分割位置
-        self.main_frame.after(100, self.set_initial_sash_position)
+        # 添加到分割器
+        self.content_area.addWidget(input_widget)
+        self.content_area.addWidget(output_widget)
+        self.content_area.setSizes([500, 500])
     
     def create_status_bar(self):
         """创建状态栏"""
-        self.status_var = tk.StringVar()
-        self.status_var.set("就绪 - 支持JSON和Python字典格式 | 拖动中间分割线调整窗口大小")
-        status_bar = ttk.Label(self.main_frame, textvariable=self.status_var, 
-                              relief=tk.SUNKEN, anchor=tk.W)
-        status_bar.pack(fill=tk.X, pady=(10, 0), padx=5)
-    
-    def set_initial_sash_position(self):
-        """设置初始分割位置为窗口中央"""
-        try:
-            if hasattr(self, 'main_frame') and self.main_frame.winfo_exists():
-                window_width = self.main_frame.winfo_width()
-                if window_width > 100:
-                    self.paned_window.sashpos(0, window_width // 2 - 50)
-        except (tk.TclError, AttributeError):
-            # 如果组件已被销毁或不存在，重试
-            if hasattr(self, 'main_frame'):
-                self.main_frame.after(100, self.set_initial_sash_position)
+        self.status_bar = QLabel()
+        self.status_bar.setText("就绪 - 支持JSON和Python字典格式 | 拖动中间分割线调整窗口大小")
+        self.status_bar.setStyleSheet("""
+            QLabel {
+                background-color: #f3f2f1;
+                border: 1px solid #e1dfdd;
+                padding: 4px;
+                font-size: 12px;
+            }
+        """)
+        self.status_bar.setFixedHeight(30)
     
     def parse_input(self, input_text):
         """智能解析输入内容，支持JSON和Python字典格式"""
@@ -218,7 +304,7 @@ class JSONFormatterTool(BaseTool):
     def format_json(self):
         """格式化JSON"""
         try:
-            input_text = self.input_text.get("1.0", tk.END).strip()
+            input_text = self.input_text.toPlainText().strip()
             if not input_text:
                 self.show_message("警告", "请输入JSON内容", "warning")
                 return
@@ -226,22 +312,22 @@ class JSONFormatterTool(BaseTool):
             json_obj = self.parse_input(input_text)
             formatted_json = json.dumps(json_obj, ensure_ascii=False, indent=4, sort_keys=True)
             
-            self.output_text.delete("1.0", tk.END)
-            self.output_text.insert("1.0", formatted_json)
+            self.output_text.clear()
+            self.output_text.setPlainText(formatted_json)
             
-            self.status_var.set("JSON格式化完成")
+            self.status_bar.setText("JSON格式化完成")
             
         except ValueError as e:
             self.show_detailed_error("格式化失败", str(e))
-            self.status_var.set("格式化失败 - 请检查语法错误")
+            self.status_bar.setText("格式化失败 - 请检查语法错误")
         except Exception as e:
             self.show_message("错误", f"格式化失败: {str(e)}", "error")
-            self.status_var.set("格式化失败")
+            self.status_bar.setText("格式化失败")
     
     def compress_json(self):
         """压缩JSON"""
         try:
-            input_text = self.input_text.get("1.0", tk.END).strip()
+            input_text = self.input_text.toPlainText().strip()
             if not input_text:
                 self.show_message("警告", "请输入JSON内容", "warning")
                 return
@@ -249,135 +335,134 @@ class JSONFormatterTool(BaseTool):
             json_obj = self.parse_input(input_text)
             compressed_json = json.dumps(json_obj, ensure_ascii=False, separators=(',', ':'))
             
-            self.output_text.delete("1.0", tk.END)
-            self.output_text.insert("1.0", compressed_json)
+            self.output_text.clear()
+            self.output_text.setPlainText(compressed_json)
             
-            self.status_var.set("JSON压缩完成")
+            self.status_bar.setText("JSON压缩完成")
             
         except ValueError as e:
             self.show_detailed_error("压缩失败", str(e))
-            self.status_var.set("压缩失败 - 请检查语法错误")
+            self.status_bar.setText("压缩失败 - 请检查语法错误")
         except Exception as e:
             self.show_message("错误", f"压缩失败: {str(e)}", "error")
-            self.status_var.set("压缩失败")
+            self.status_bar.setText("压缩失败")
     
     def validate_json(self):
         """验证JSON"""
         try:
-            input_text = self.input_text.get("1.0", tk.END).strip()
+            input_text = self.input_text.toPlainText().strip()
             if not input_text:
                 self.show_message("警告", "请输入JSON内容", "warning")
                 return
             
             self.parse_input(input_text)
             self.show_message("验证结果", "✅ 格式正确！\n\n已成功解析为JSON对象")
-            self.status_var.set("格式验证通过")
+            self.status_bar.setText("格式验证通过")
             
         except ValueError as e:
             self.show_detailed_error("验证失败", str(e))
-            self.status_var.set("格式验证失败 - 请检查语法错误")
+            self.status_bar.setText("格式验证失败 - 请检查语法错误")
         except Exception as e:
             self.show_message("验证结果", f"格式错误: {str(e)}", "error")
-            self.status_var.set("格式验证失败")
+            self.status_bar.setText("格式验证失败")
     
     def clear_all(self):
         """清空所有内容"""
-        self.input_text.delete("1.0", tk.END)
-        self.output_text.delete("1.0", tk.END)
-        self.status_var.set("已清空")
+        self.input_text.clear()
+        self.output_text.clear()
+        self.status_bar.setText("已清空")
     
     def open_file(self):
         """打开文件"""
         try:
-            file_path = filedialog.askopenfilename(
-                title="选择JSON文件",
-                filetypes=[("JSON文件", "*.json"), ("文本文件", "*.txt"), ("所有文件", "*.*")]
+            file_path, _ = QFileDialog.getOpenFileName(
+                self.main_widget,
+                "选择JSON文件",
+                "",
+                "JSON文件 (*.json);;文本文件 (*.txt);;所有文件 (*.*)"
             )
             
             if file_path:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
-                self.input_text.delete("1.0", tk.END)
-                self.input_text.insert("1.0", content)
+                self.input_text.clear()
+                self.input_text.setPlainText(content)
                 
-                self.status_var.set(f"已打开文件: {os.path.basename(file_path)}")
+                self.status_bar.setText(f"已打开文件: {os.path.basename(file_path)}")
                 
         except Exception as e:
             self.show_message("错误", f"打开文件失败: {str(e)}", "error")
-            self.status_var.set("打开文件失败")
+            self.status_bar.setText("打开文件失败")
     
     def save_file(self):
         """保存文件"""
         try:
-            output_content = self.output_text.get("1.0", tk.END).strip()
+            output_content = self.output_text.toPlainText().strip()
             if not output_content:
                 self.show_message("警告", "没有内容可保存", "warning")
                 return
             
-            file_path = filedialog.asksaveasfilename(
-                title="保存JSON文件",
-                defaultextension=".json",
-                filetypes=[("JSON文件", "*.json"), ("文本文件", "*.txt"), ("所有文件", "*.*")]
+            file_path, _ = QFileDialog.getSaveFileName(
+                self.main_widget,
+                "保存JSON文件",
+                "",
+                "JSON文件 (*.json);;文本文件 (*.txt);;所有文件 (*.*)"
             )
             
             if file_path:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(output_content)
                 
-                self.status_var.set(f"已保存文件: {os.path.basename(file_path)}")
+                self.status_bar.setText(f"已保存文件: {os.path.basename(file_path)}")
                 self.show_message("成功", "文件保存成功！")
                 
         except Exception as e:
             self.show_message("错误", f"保存文件失败: {str(e)}", "error")
-            self.status_var.set("保存文件失败")
+            self.status_bar.setText("保存文件失败")
     
     def show_detailed_error(self, title, error_message):
         """显示详细的错误信息对话框"""
-        error_window = tk.Toplevel(self.parent_frame)
-        error_window.title(title)
-        error_window.geometry("600x400")
-        error_window.resizable(True, True)
+        error_dialog = QDialog(self.main_widget)
+        error_dialog.setWindowTitle(title)
+        error_dialog.resize(600, 400)
         
-        error_window.transient(self.parent_frame)
-        error_window.grab_set()
+        layout = QVBoxLayout(error_dialog)
         
-        main_frame = ttk.Frame(error_window, padding="15")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # 标题
+        title_label = QLabel("❌ " + title)
+        title_label.setStyleSheet("""
+            QLabel {
+                font-weight: bold;
+                font-size: 12px;
+                color: #d13438;
+            }
+        """)
+        layout.addWidget(title_label)
         
-        title_label = ttk.Label(main_frame, text="❌ " + title, 
-                               font=('Segoe UI', 12, 'bold'),
-                               foreground='#d13438')
-        title_label.pack(anchor=tk.W, pady=(0, 10))
+        # 错误信息文本框
+        error_text = QTextEdit()
+        error_text.setPlainText(error_message)
+        error_text.setReadOnly(True)
+        font = QFont("Consolas", 10)
+        error_text.setFont(font)
+        error_text.setStyleSheet("background-color: #f8f8f8;")
+        layout.addWidget(error_text, 1)
         
-        text_frame = ttk.Frame(main_frame)
-        text_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        # 按钮区域
+        button_frame = QWidget()
+        button_layout = QHBoxLayout(button_frame)
         
-        error_text = tk.Text(text_frame, wrap=tk.WORD, font=('Consolas', 10),
-                            relief=tk.FLAT, borderwidth=1, background='#f8f8f8')
-        scrollbar = ttk.Scrollbar(text_frame, orient=tk.VERTICAL, command=error_text.yview)
-        error_text.configure(yscrollcommand=scrollbar.set)
+        copy_btn = QPushButton("📋 复制错误信息")
+        copy_btn.clicked.connect(lambda: self.copy_to_clipboard(error_message))
+        button_layout.addWidget(copy_btn)
         
-        error_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        button_layout.addStretch()
         
-        error_text.insert("1.0", error_message)
-        error_text.configure(state=tk.DISABLED)
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(error_dialog.close)
+        button_layout.addWidget(close_btn)
         
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X)
+        layout.addWidget(button_frame)
         
-        copy_btn = ttk.Button(button_frame, text="📋 复制错误信息", 
-                             command=lambda: self.copy_to_clipboard(error_message))
-        copy_btn.pack(side=tk.LEFT, padx=(0, 10))
-        
-        close_btn = ttk.Button(button_frame, text="关闭", 
-                              command=error_window.destroy)
-        close_btn.pack(side=tk.RIGHT)
-        
-        error_window.update_idletasks()
-        x = (error_window.winfo_screenwidth() // 2) - (error_window.winfo_width() // 2)
-        y = (error_window.winfo_screenheight() // 2) - (error_window.winfo_height() // 2)
-        error_window.geometry(f"+{x}+{y}")
-        
-        close_btn.focus_set()
+        error_dialog.exec_()

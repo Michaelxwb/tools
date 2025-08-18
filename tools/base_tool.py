@@ -5,17 +5,18 @@
 定义工具的通用接口和功能
 """
 
-import tkinter as tk
-from tkinter import ttk
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
+                             QMessageBox, QApplication, QFrame, QStyle)
+from PyQt5.QtCore import Qt, pyqtSignal
 from abc import ABC, abstractmethod
 
 
 class BaseTool(ABC):
     """工具基类"""
     
-    def __init__(self, parent_frame):
-        self.parent_frame = parent_frame
-        self.main_frame = None
+    def __init__(self, parent_widget=None):
+        self.parent_widget = parent_widget
+        self.main_widget = None
         self.setup_ui()
     
     @abstractmethod
@@ -25,57 +26,58 @@ class BaseTool(ABC):
     
     def show(self):
         """显示工具界面"""
-        try:
-            if self.main_frame and self.main_frame.winfo_exists():
-                self.main_frame.pack(fill=tk.BOTH, expand=True)
-        except tk.TclError:
-            # 如果框架已被销毁，重新创建
-            self.setup_ui()
+        if self.main_widget:
+            self.main_widget.show()
     
     def hide(self):
         """隐藏工具界面"""
-        try:
-            if self.main_frame and self.main_frame.winfo_exists():
-                self.main_frame.pack_forget()
-        except tk.TclError:
-            # 框架已被销毁，无需操作
-            pass
+        if self.main_widget:
+            self.main_widget.hide()
     
     def copy_to_clipboard(self, text):
         """复制文本到剪贴板"""
         try:
-            self.parent_frame.clipboard_clear()
-            self.parent_frame.clipboard_append(text)
+            clipboard = QApplication.clipboard()
+            clipboard.setText(text)
             return True
         except Exception:
             return False
     
     def show_message(self, title, message, msg_type="info"):
         """显示消息"""
-        from tkinter import messagebox
+        msg_box = QMessageBox(self.parent_widget) if self.parent_widget else QMessageBox()
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
         
         if msg_type == "info":
-            messagebox.showinfo(title, message)
+            msg_box.setIcon(QMessageBox.Information)
         elif msg_type == "warning":
-            messagebox.showwarning(title, message)
+            msg_box.setIcon(QMessageBox.Warning)
         elif msg_type == "error":
-            messagebox.showerror(title, message)
+            msg_box.setIcon(QMessageBox.Critical)
+        
+        msg_box.exec_()
     
     def create_button_frame(self, parent, buttons_config):
         """创建按钮框架"""
-        button_frame = ttk.Frame(parent, padding="10")
-        button_frame.pack(fill=tk.X)
+        button_frame = QWidget(parent)
+        button_layout = QHBoxLayout(button_frame)
+        button_layout.setContentsMargins(10, 10, 10, 10)
         
         # 居中的按钮容器
-        button_container = ttk.Frame(button_frame)
-        button_container.pack(expand=True)
+        button_container = QWidget()
+        container_layout = QHBoxLayout(button_container)
+        container_layout.addStretch()
         
-        for i, config in enumerate(buttons_config):
-            btn = ttk.Button(button_container, 
-                           text=config.get('text', ''),
-                           command=config.get('command', None),
-                           width=config.get('width', 12),
-                           style=config.get('style', 'TButton'))
-            btn.pack(side=tk.LEFT, padx=5, pady=2)
+        for config in buttons_config:
+            btn = QPushButton(config.get('text', ''), button_container)
+            btn.clicked.connect(config.get('command', lambda: None))
+            if 'width' in config:
+                btn.setFixedWidth(config['width'] * 10)  # 粗略转换
+            # 样式需要在子类中设置
+            container_layout.addWidget(btn)
+        
+        container_layout.addStretch()
+        button_layout.addWidget(button_container)
         
         return button_frame

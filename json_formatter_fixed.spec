@@ -5,10 +5,10 @@ block_cipher = None
 
 a = Analysis(
     ['toolkit_main.py'],
-    pathex=['D:/tools'],
+    pathex=['D:/workspace/tools'],
     binaries=[],
     datas=[("icon.ico", "."), ("icon.png", ".")],
-    hiddenimports=['PIL', 'PIL.Image', 'PIL.ImageTk', 'tools.json_formatter_tool', 'tools.timestamp_converter_tool', 'tools.base_tool'],
+    hiddenimports=['PyQt5', 'PyQt5.QtWidgets', 'PyQt5.QtCore', 'PyQt5.QtGui', 'tools.json_formatter_tool', 'tools.timestamp_converter_tool', 'tools.base_tool'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -40,5 +40,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='D:/tools/icon.ico',
+    icon='D:/workspace/tools/icon.ico',
 )
