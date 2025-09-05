@@ -346,16 +346,26 @@ class TimestampConverterTool(BaseTool):
             if timestamp > 10000000000:  # 毫秒时间戳
                 timestamp = timestamp / 1000
             
-            # 转换为可读时间
-            dt = datetime.datetime.fromtimestamp(timestamp)
-            readable_time = dt.strftime("%Y-%m-%d %H:%M:%S")
-            
-            self.timestamp_result_entry.setText(readable_time)
+            # 检查时间戳范围（Unix时间戳有效范围）
+            try:
+                # 检查是否在合理范围内（1970-2038年，考虑32位系统限制）
+                if timestamp < -2147483648 or timestamp > 2147483647:
+                    self.show_message("错误", "时间戳超出有效范围(-2147483648 到 2147483647)", "error")
+                    return
+                
+                dt = datetime.datetime.fromtimestamp(timestamp)
+                # 检查年份范围
+                if dt.year < 1970 or dt.year > 2038:
+                    self.show_message("错误", "时间超出有效范围(1970-2038年)", "error")
+                    return
+                    
+                readable_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                self.timestamp_result_entry.setText(readable_time)
+            except (OSError, ValueError) as e:
+                self.show_message("错误", f"时间戳超出有效范围: {str(e)}", "error")
             
         except ValueError:
             self.show_message("错误", "请输入有效的时间戳数字", "error")
-        except OSError:
-            self.show_message("错误", "时间戳超出有效范围", "error")
         except Exception as e:
             self.show_message("错误", f"转换失败: {str(e)}", "error")
     
@@ -422,3 +432,9 @@ class TimestampConverterTool(BaseTool):
         
         except ValueError:
             self.show_message("错误", "无效的时间戳", "error")
+    
+    def cleanup(self):
+        """清理资源"""
+        if hasattr(self, 'timer') and self.timer:
+            self.timer.stop()
+            self.timer.deleteLater()
