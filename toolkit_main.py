@@ -14,6 +14,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from tools.json_formatter_tool import JSONFormatterTool
 from tools.timestamp_converter_tool import TimestampConverterTool
+from tools.redis_tool import RedisTool
 
 
 class DeveloperToolkit(QMainWindow):
@@ -132,6 +133,26 @@ class DeveloperToolkit(QMainWindow):
         tool_layout.addWidget(timestamp_btn)
         self.tool_buttons['timestamp_converter'] = timestamp_btn
         
+        # Redis工具按钮
+        redis_btn = QPushButton("🗄️ Redis工具")
+        redis_btn.clicked.connect(lambda: self.switch_tool('redis_tool'))
+        redis_btn.setFixedHeight(40)
+        redis_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                font-size: 13px;
+                padding: 10px 20px;
+                border: 2px solid #cccccc;
+                border-radius: 4px;
+                background-color: white;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        tool_layout.addWidget(redis_btn)
+        self.tool_buttons['redis_tool'] = redis_btn
+        
         tool_layout.addStretch()
         main_layout.addWidget(tool_frame)
         
@@ -199,6 +220,8 @@ class DeveloperToolkit(QMainWindow):
             self.tools[tool_name] = JSONFormatterTool(self.content_widget)
         elif tool_name == 'timestamp_converter':
             self.tools[tool_name] = TimestampConverterTool(self.content_widget)
+        elif tool_name == 'redis_tool':
+            self.tools[tool_name] = RedisTool(self.content_widget)
         
         # 添加工具到界面
         if tool_name in self.tools:
